@@ -1,4 +1,4 @@
-# SImpleShop_AngularJs
+# SimpleShop_AngularJs
 
 * To get all required package before deploy 
   - Run > npm install <ALL_REQUIRED_PACKAGE> 
