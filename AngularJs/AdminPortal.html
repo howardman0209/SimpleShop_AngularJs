@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en" ng-app='AdminPortal' ng-controller='AdminPortalController' ng-init="init()">
+<style>
+    table,
+    th,
+    td {
+        border: 1px solid grey;
+        border-collapse: collapse;
+        padding: 5px;
+    }
+
+    table tr:nth-child(odd) {
+        background-color: #f1f1f1;
+    }
+
+    table tr:nth-child(even) {
+        background-color: #ffffff;
+    }
+
+    #orderList {
+        border-top: 1px solid grey;
+        border-collapse: collapse;
+        padding: 8px;
+    }
+</style>
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.9/angular.min.js"></script>
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Portal</title>
+</head>
+
+<body>
+    <input type="button" value="Product" ng-click="selectEditTarget('Product')" ng-disabled="isEditProduct">
+    <input type="button" value="Category" ng-click="selectEditTarget('Category')" ng-disabled="!isEditProduct">
+
+    <div id="EditProductController" ng-show="isEditProduct" ng-controller='EditProductController' ng-init="init()">
+        Product
+        <form name="createProductForm" novalidate>
+            <p>Name: <input type="text" name="productName" ng-model="productName" required></p>
+            <span style="color:red"
+                ng-show="createProductForm.productName.$dirty && createProductForm.productName.$invalid">
+                <span ng-show="createProductForm.productName.$error.required">Name is required.</span>
+            </span>
+            <p>Price: <input type="number" min="0" max="999999" step="any" name="price" ng-model="price" required></p>
+            <span style="color:red" ng-show="createProductForm.price.$dirty && createProductForm.price.$invalid">
+                <span ng-show="createProductForm.price.$error.required">Price is required.</span>
+                <span ng-show="createProductForm.price.$error.max">Invalid Price Amount.</span>
+                <span ng-show="createProductForm.price.$error.min">Invalid Price Amount.</span>
+            </span>
+            <p>Quantity: <input type="number" min="0" max="999999" step="any" ng-model="quantity"></p>
+            <p>Description: <input type="text" ng-model="description"></p>
+            <p>Category Name:
+                <select ng-model="categoryId">
+                    <option ng-repeat="x in categories" value="{{x.categoryId}}">{{x.name}}</option>
+                </select>
+            </p>
+            <input type="button" value="Create" ng-click="createProduct()"
+                ng-disabled="!createProductForm.price.$dirty|| !createProductForm.productName.$dirty || (createProductForm.productName.$dirty && createProductForm.productName.$invalid) || (createProductForm.price.$dirty && createProductForm.price.$invalid)">
+            <button type="reset" id="productFormResetBtn" form-reset
+                class="btn btn-default text-uppercase">Reset</button>
+        </form>
+        <br>
+        <table>
+            Current Products
+            <tr>
+                <th>#</th>
+                <th>Name</th>
+                <th>Price</th>
+                <th>Quantity</th>
+                <th>Description</th>
+                <th>Category</th>
+                <th colspan="2"></th>
+            </tr>
+            <tr ng-repeat="x in products | orderBy: 'categoryName'">
+                <td>{{$index + 1}}</td>
+                <td>
+                    <input type="text" ng-model="x.name" ng-disabled="!isEditing[products.indexOf(x)]">
+                </td>
+                <td>$
+                    <input type="number" ng-model="x.price" ng-disabled="!isEditing[products.indexOf(x)]">
+                </td>
+                <td>
+                    <input type="number" ng-model="x.quantity" ng-disabled="!isEditing[products.indexOf(x)]">
+                </td>
+                <td>
+                    <input type="text" ng-model="x.description" ng-disabled="!isEditing[products.indexOf(x)]">
+                </td>
+                <td>
+                    <select ng-model="x.categoryId" ng-disabled="!isEditing[products.indexOf(x)]">
+                        <option ng-repeat="x in categories" value="{{x.categoryId}}">{{x.name}}</option>
+                    </select>
+                </td>
+                <td><input type="button" value="Edit" ng-show="!isEditing[products.indexOf(x)]"
+                        ng-click="enableEdit(x, products.indexOf(x))">
+                    <input type="button" value="OK" ng-show="isEditing[products.indexOf(x)]"
+                        ng-click="editProduct(x, products.indexOf(x))">
+                </td>
+                <td><input type="button" value="Delete" ng-click="deleteProduct(x.productId)"></td>
+            </tr>
+        </table>
+        <p>{{response}}</p>
+    </div>
+    <div id="EditCategoryController" ng-show="!isEditProduct" ng-controller='EditCategoryController' ng-init="init()">
+        Category
+        <form name="createCategoryForm" novalidate>
+            <p>Name: <input type="text" name="categoryName" ng-model="categoryName" required></p>
+            <p>
+                <span style="color:red"
+                    ng-show="createCategoryForm.categoryName.$dirty && createCategoryForm.categoryName.$invalid">
+                    <span ng-show="createCategoryForm.categoryName.$error.required">Name is required.</span>
+                </span>
+            </p>
+            <input type="button" value="Create" ng-click="createCategory()"
+                ng-disabled="(!createCategoryForm.categoryName.$dirty) || (createCategoryForm.categoryName.$dirty && createCategoryForm.categoryName.$invalid) ">
+            <button type="reset" id="categoryFormResetBtn" form-reset
+                class="btn btn-default text-uppercase">Reset</button>
+        </form>
+        <br>
+        <table>
+            Current Categories
+            <tr>
+                <th>#</th>
+                <th>Name</th>
+                <th colspan="2"></th>
+            </tr>
+            <tr ng-repeat="x in categories | orderBy: 'name'">
+                <td>{{$index + 1}}</td>
+                <td>
+                    <input type="text" value="{{x.name}}" ng-model="x.name"
+                        ng-disabled="!isEditing[categories.indexOf(x)]">
+                </td>
+                <td>
+                    <input type="button" value="Edit" ng-show="!isEditing[categories.indexOf(x)]"
+                        ng-click="enableEdit(x.name, categories.indexOf(x))">
+                    <input type="button" value="OK" ng-show="isEditing[categories.indexOf(x)]"
+                        ng-click="editCategory(x, categories.indexOf(x))">
+                </td>
+                <td><input type="button" value="Delete" ng-click="deleteCategory(x.categoryId)"></td>
+            </tr>
+        </table>
+        <p>{{response}}</p>
+    </div>
+    <div id="OrdersController" ng-show="true" ng-controller='OrdersController' ng-init="init()">Orders
+        <div id="orderList" ng-repeat="x in orders">
+            <p>#{{orders.indexOf(x)+1}}</p>
+            <p>Order ID: {{x.orderId}}</p>
+            <p>Create Time: {{x.createTime}}</p>
+            <p>Total Amount: {{x.totalAmount | currency}}</p>
+            <p>Status: {{x.status}} <input type="button" value="Confirm Order" ng-click="confirmOrder(x.orderId)"
+                    ng-disabled="x.status == 'confirm'"></p>
+            <table>Items:
+                <tr>
+                    <th>#</th>
+                    <th>Name</th>
+                    <th>ID</th>
+                    <th>Price</th>
+                    <th>Quantity</th>
+                </tr>
+                <tr ng-repeat="y in x.purchaseItems">
+                    <td>{{x.purchaseItems.indexOf(y)+1}}</td>
+                    <td>{{y.name}}</td>
+                    <td>{{y.productId}}</td>
+                    <td>{{y.price | currency}}</td>
+                    <td>{{y.quantity}}</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+    <input type="button" ng-click="testFn()" value="test">
+</body>
+<script type="module" src="./Js/AdminPortal.js"></script>
+
+</html>

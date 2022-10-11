@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<style>
+    table,
+    th,
+    td {
+        border: 1px solid grey;
+        border-collapse: collapse;
+        padding: 5px;
+    }
+
+    table tr:nth-child(odd) {
+        background-color: #f1f1f1;
+    }
+
+    table tr:nth-child(even) {
+        background-color: #ffffff;
+    }
+</style>
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.9/angular.min.js"></script>
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shop</title>
+</head>
+
+<body>
+    <div ng-app='Shop'>
+        <div ng-controller='ShopController' ng-init="init()">
+            Category
+            <select ng-model="selectedCategory">
+                <option ng-repeat="x in categories" value="{{selectedCategoryValue(x.name)}}">{{x.name}}</option>
+            </select>
+            <p>Search: <input type="text" ng-model="searchProductName"></p>
+            <table>
+                <tr>
+                    <th>#</th>
+                    <th>Product</th>
+                    <th>Stock</th>
+                </tr>
+                <tr ng-repeat="x in stock | filter: searchProductName | filter: selectedCategory | orderBy: 'name'">
+                    <td>{{$index+1}}</td>
+                    <td>
+                        <input type="button" ng-model="selectedProduct" value="{{x.name}}"
+                            ng-click="addItemBtn(x.productId)">
+                    </td>
+                    <td>{{x.quantity}}</td>
+                </tr>
+            </table>
+            </br>
+            <table>
+                Cart:
+                <tr>
+                    <th>#</th>
+                    <th>Product</th>
+                    <th>Price</th>
+                    <th>Quantity</th>
+                    <th colspan="3"></th>
+                </tr>
+                <tr ng-repeat="x in cart.purchaseItems | filter: quantityFilter | orderBy: 'name'">
+                    <td>{{ $index + 1 }}</td>
+                    <td>{{ x.name }}</td>
+                    <td>{{ x.price | currency}}</td>
+                    <td>{{ x.quantity }}</td>
+                    <td><input type="button" value="-" ng-click="deleteItemBtn(x.productId)"></td>
+                    <td><input type="button" value="+" ng-click="addItemBtn(x.productId)"></td>
+                    <td><input type="button" value="x" ng-click="clearItemBtn(x.productId)"></td>
+                </tr>
+                <tr>
+                    <th></th>
+                    <th colspan="">Total Amount</th>
+                    <td colspan="">{{cart.totalAmount | currency}}</td>
+                    <td colspan="">
+                        <input type="button" value="Clear Cart" ng-click="clearCart()" ng-disabled="!isValidAmount()">
+                    </td>
+                    <td colspan="3">
+                        <input type="button" value="Place Order" ng-click="placeOrder()" ng-disabled="!isValidAmount()">
+                    </td>
+                </tr>
+            </table>
+
+            <p>{{response}}</p>
+        </div>
+        <!-- ng-disabled="!isValidAmount()" -->
+        <!-- <test-directive-btn></test-directive-btn> -->
+    </div>
+    <!-- <input type="button" onclick="btn()"> -->
+</body>
+<script type="module" src="./Js/index.js"></script>
+
+</html>
